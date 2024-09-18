@@ -1,0 +1,31 @@
+Logger := proc(msg ; (level='INFO'):{'INFO','ERROR','CRITICAL','DEBUG'}, (fn='stderr'):string)
+    if printlevel <2 and level='DEBUG' then return() fi:
+
+    if fn='stderr' then 
+        f := sprintf('/proc/%d/fd/2', getpid());
+    else f := fn 
+    fi:
+    OpenWriting(f);
+    printf('%s [%s]: %A\n', date(), level, msg);
+    OpenWriting(previous);
+end:
+
+
+SendEMail := proc(msg:string, to_:string, subject:string ; 
+        (from_='Orthology Benchmark Service <no-reply@'.host.'>'):string)
+
+    valid_re := MatchRegex('.*@.*\.[[:alnum:]]{2,}', to_);
+    if length(valid_re) = 0 then error('invalid email: '.to_) fi:
+
+    t := TimedCallSystem('mktemp');
+    if t[1] <> 0 then error('cannot create temp file') fi:
+    fn := trim(t[2]);
+    OpenWriting(fn);
+    printf('From: %s\nTo: %s\nSubject: %s\n\n%s\n', from_, to_, subject, msg);
+    OpenWriting(previous);
+
+    CallSystem('sendmail '.to_.' < '.fn);
+    CallSystem('rm -f '.fn);
+end:
+
+

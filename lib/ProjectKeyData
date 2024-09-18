@@ -1,0 +1,167 @@
+module external PKeyData, UpdatePKeyDataPermanent, AddPKeyData, GetPKeyData, GetPublicProjects, 
+                GetPrivateProjects, ProjSpeciesOverlap, ProjMetProperty, GetProjISets:
+
+fn := datdir.'projectKeys.drw';
+                
+
+PKeyData := proc(PID:string, Title:string, fnBase:string, createDat:string,
+                 ref:{'OMA','RefSet5','RefSet17','RefSet18'},
+                 isPublic:boolean, directMap:boolean, 
+                 NSeqSub:{0,posint}, 
+                 NOrthSub:posint, 
+                 NSeqMap:{-1,0,posint}, 
+                 NOrthMap:{-1,0,posint},
+                 OrgsCovered:{set,intersect()},
+                 props:table,
+                 Website:string,
+                 Description:string,
+                 isObsolete:boolean,
+                 email:string)
+   if nargs<13 then error('wrong number of arguments');
+   elif nargs=13 then procname(args,'','',false,'');
+   elif nargs=14 then procname(args,'',false,'');
+   elif nargs=15 then procname(args,false,'');
+   elif nargs=16 then procname(args,'');
+   else noeval(procname(args)):fi
+end:
+CompleteClass(PKeyData):
+
+LoadPKeyData := proc()
+    global PROJECTS, __LOADEDLASTTIME;
+    if not assigned(PROJECTS) or FileStat(fn)['st_mtime']>__LOADEDLASTTIME then
+        ReadProgram(fn):
+        __LOADEDLASTTIME := UTCTime();
+    fi:
+end:
+
+UpdatePKeyDataPermanent := proc(pKey:PKeyData)
+    PID := pKey['PID'];
+    
+    # find the line in the file that holds this project
+    t := ReadRawFile(datdir.'projectKeys.drw');
+    query := 'PROJECTS['''.PID.'''] := ';
+    off1 := SearchString(query, t);
+    k := SearchString(':\n',t[off1..-1]);
+    t2 := ReplaceString(t[off1+1..off1+k], sprintf('%s%A:',query, pKey),t);
+        
+    # store new PKeyData in file
+    verb := Set(quiet=true);
+    OpenWriting(fn);
+    prints(t2):
+    OpenWriting(previous);
+    Set(quiet=verb);
+end:
+
+
+AddPKeyData := proc(tit:string, fnbase:string ; 
+   'NSeqSub'=((NSeqSub=0):{0,posint}),
+   'NOrthSub'=((NOrthSub=0):{0,posint}),
+   'NSeqMap'=((NSeqMap=-1):integer),
+   'NOrthMap'=((NOrthMap=-1):integer),
+   'isPublic'=((isPublic=false):boolean),
+   'reference'=((reference='OMA'):{'OMA','RefSet5','RefSet17','RefSet18'}),
+   'url'=((url=''):string),
+   'description'=((desc=''):string),
+   'isObsolete'=((isObsolete=false):boolean),
+   'email'=((email=''):string))
+
+    alphnum := {seq(i,i=48..57), seq(i,i=65..90),seq(i,i=97..122)}:
+    id := ConcatStrings( [seq(IntToAscii(Rand(alphnum)), 15)] );
+    pr := PKeyData( id, tit, fnbase, date(), reference, isPublic, 
+                    reference<>'OMA', NSeqSub, NOrthSub, NSeqMap, 
+                    NOrthMap, {}, table(), url, desc, isObsolete,
+                    email);
+
+    verb := Set(quiet=true);
+    OpenAppending(datdir.'projectKeys.drw');
+    printf('PROJECTS[%A] := %A:\n', id, pr);
+    OpenAppending(previous);
+    Set(quiet=verb);
+    
+    LoadPKeyData();
+ 
+    return(id);
+end:
+
+
+GetPKeyData := proc(id:string)
+    LoadPKeyData();
+    p := PROJECTS[id];
+    if p=0 then error('invalid project id') fi:
+    return(p);
+end:
+
+GetPublicProjects := proc( ; ref:string)
+    LoadPKeyData();
+    p := [];
+    for id in Indices(PROJECTS) do
+        if PROJECTS[id, isPublic] and 
+            (not assigned(ref) or ref=PROJECTS[id,'ref']) then
+           p := append(p, PROJECTS[id]);
+        fi;
+    od;
+    return(p);
+end:
+
+GetPrivateProjects := proc( ; ref:sting)
+    LoadPKeyData();
+    p := []:
+    for id in Indices(PROJECTS) do 
+        if not PROJECTS[id, isPublic] and
+             (not assigned(ref) or ref=PROJECTS[id,'ref']) then
+            p := append(p, PROJECTS[id]);
+        fi:
+    od:
+    return(p);
+end:
+
+
+GetProjISets := proc(prjs_:{string,PKeyData,list})
+    global ISET:
+    iSet := intersect();
+    prjs := If(not type(prjs_,list), [prjs_], prjs_):
+    for z in prjs do 
+        if type(z,PKeyData) then
+            PKobj := z;
+        elif type(z,string) then
+            PKobj := GetPKeyData(z);
+        else error('invalid project id') fi:
+
+        ISET := 0; path := PKobj['fnBase'] . '.iset';
+        if FileExists(path) then
+            ReadProgram(PKobj['fnBase'].'.iset');
+            if ISET=0 then error('could not load iSet of '.PKobj['Title']) fi:
+        else ISET := intersect() 
+        fi:
+
+        iSet := intersect(iSet, ISET);
+    od:
+    return(iSet);
+end:
+
+ProjMetProperty := proc( PID:string, Prop:TestProperty )
+    pKey := GetPKeyData(PID);
+    p := pKey['props'];
+    nam := Prop['Name'];
+    if p[nam]=unassigned or Prop['YoungerThan']>p[nam,2] then
+        # recompute whether property is met
+        res := Prop['Evaluator'](pKey, Prop);
+        p[nam] := [res, UTCTime()];
+        pKey['props'] := p:
+        UpdatePKeyDataPermanent(pKey);
+    fi:
+    return(p[nam,1]);
+end:
+
+ProjSpeciesOverlap := proc( p:{list(string), set(string), list(PKeyData)} )
+    if type(p[1], string) then
+       pKeys := [seq(GetPKeyData(z), z=p)];
+    else pKeys := p fi;
+    
+    overlap := intersect():
+    for z in pKeys do overlap := intersect(overlap, z['OrgsCovered']) od:
+    if overlap=intersect() then overlap := {op(KnownSpecies())} fi: 
+    return(overlap):
+end:
+
+end: #module

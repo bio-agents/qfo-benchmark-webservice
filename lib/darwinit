@@ -1,0 +1,88 @@
+# darwinit file for the special functions of the Benchmark Service
+cdir := getenv('DARWIN_ORTHOLOG_BENCHMARK_REPO_PATH');
+ddir := getenv('DARWIN_ORTHOLOG_BENCHMARKDATA_PATH');
+imgdir := ddir . '/htdocs/imgs/':
+imgurl := '/imgs/':
+resimgdir := ddir.'/htdocs/resultimgs/':
+resimgurl := '/resultimgs/';
+rawdir := ddir . '/htdocs/raw/':
+rawurl := '/raw/':
+brwrel := 'All.May2010';
+omaDBpath := getenv('DARWIN_BROWSERDATA_PATH').'/';
+refset5DBpath := ddir . '/reference5/';
+refset17DBpath := ddir . '/reference17/';
+refset18DBpath := ddir . '/reference18/';
+datdir := ddir . '/data/';
+sessiondir := ddir . '/sessions/';
+resdir := ddir . '/results/';
+
+host := getenv('DARWIN_ORTHOLOG_BENCHMARK_HOST');
+if host='' then host := 'orthology.benchmarkservice.org' fi:
+
+
+GenerateTemplate := noeval(ReadLibrary( cdir.'/lib/GenerateTemplate', GenerateTemplate)):
+CreateIndex := noeval(ReadLibrary( cdir.'/lib/Index',CreateIndex));
+SearchIndex := noeval(ReadLibrary( cdir.'/lib/Index',SearchIndex));
+LoadIndex := noeval(ReadLibrary( cdir.'/lib/Index',LoadIndex));
+TrimID := noeval(ReadLibrary( cdir.'/lib/XRefs',TrimID));
+UniProtAC := noeval(ReadLibrary( cdir.'/lib/XRefs',UniProtAC));
+EnsemblID := noeval(ReadLibrary( cdir.'/lib/XRefs',EnsemblID));
+
+Logger := noeval(ReadLibrary(cdir.'/lib/Logging', Logger));
+SendEMail := noeval(ReadLibrary(cdir.'/lib/Logging', SendEMail));
+
+NrOfGenomes := noeval(ReadLibrary( cdir.'/lib/EntryNav', NrOfGenomes));
+NrOfProteins := noeval(ReadLibrary( cdir.'/lib/EntryNav', NrOfProteins));
+GenomeNrFromENr := noeval(ReadLibrary( cdir.'/lib/EntryNav', GenomeNrFromENr));
+GenomeCodeFromENr := noeval(ReadLibrary( cdir.'/lib/EntryNav', GenomeCodeFromENr));
+ENrFromLabel := noeval(ReadLibrary( cdir.'/lib/EntryNav', ENrFromLabel));
+GenomeRange := noeval(ReadLibrary( cdir.'/lib/EntryNav', GenomeRange));
+GenomeNrFromCode := noeval(ReadLibrary( cdir.'/lib/EntryNav', GenomeNrFromCode));
+ENr2Label := noeval(ReadLibrary( cdir.'/lib/EntryNav', ENr2Label));
+ENr2XRef  := noeval(ReadLibrary( cdir.'/lib/EntryNav', ENr2XRef));
+Nr2SEQ := noeval(ReadLibrary( cdir.'/lib/EntryNav', Nr2SEQ));
+DbEntryNrFromENr := noeval(ReadLibrary( cdir.'/lib/EntryNav', DbEntryNrFromENr));
+ParseLongList := noeval(ReadLibrary( cdir.'/lib/EntryNav', ParseLongList));
+KnownSpecies := noeval(ReadLibrary( cdir.'/lib/EntryNav', KnownSpecies));
+GetGenomeSummaries := noeval(ReadLibrary(cdir.'/lib/EntryNav', GetGenomeSummaries));
+
+PKeyData := noeval(ReadLibrary(cdir.'/lib/ProjectKeyData',PKeyData));
+UpdatePKeyDataPermanent := noeval(ReadLibrary(cdir.'/lib/ProjectKeyData',UpdatePKeyDataPermanent));
+AddPKeyData := noeval(ReadLibrary(cdir.'/lib/ProjectKeyData',AddPKeyData));
+GetPKeyData := noeval(ReadLibrary(cdir.'/lib/ProjectKeyData',GetPKeyData));
+GetPublicProjects := noeval(ReadLibrary(cdir.'/lib/ProjectKeyData',GetPublicProjects));
+GetPrivateProjects := noeval(ReadLibrary(cdir.'/lib/ProjectKeyData',GetPrivateProjects));
+GetProjISets := noeval(ReadLibrary(cdir.'/lib/ProjectKeyData', GetProjISets));
+ProjMetProperty := noeval(ReadLibrary(cdir.'/lib/ProjectKeyData', ProjMetProperty));
+ProjSpeciesOverlap := noeval(ReadLibrary(cdir.'/lib/ProjectKeyData', ProjSpeciesOverlap));
+
+TestProperty := noeval(ReadLibrary(cdir.'/lib/TestProperties',TestProperty));
+GetTestProperty := noeval(ReadLibrary(cdir.'/lib/TestProperties',GetTestProperty));
+AddTestProperty := noeval(ReadLibrary(cdir.'/lib/TestProperties',AddTestProperty));
+EvaluateTreeTestProperty := noeval(ReadLibrary(cdir.'/lib/TestProperties',EvaluateTreeTestProperty)):
+EvaluateRefPhyloTestProperty := noeval(ReadLibrary(cdir.'/lib/TestProperties',EvaluateRefPhyloTestProperty)):
+
+FileExists := noeval(ReadLibrary(cdir.'/lib/LockFileOperations', FileExists)):
+IsLockProcessAlive := noeval(ReadLibrary(cdir.'/lib/LockFileOperations', IsLockProcessAlive));
+HandleLockFile := noeval(ReadLibrary(cdir.'/lib/LockFileOperations', HandleLockFile));
+WriteLock := noeval(ReadLibrary(cdir.'/lib/LockFileOperations', WriteLock));
+
+Handle2dROCFiles := noeval(ReadLibrary(cdir.'/lib/ResultHandler', Handle2dROCFiles));
+HandleBoxRFFiles := noeval(ReadLibrary(cdir.'/lib/ResultHandler', HandleBoxRFFiles));
+Handle2dSimFiles := noeval(ReadLibrary(cdir.'/lib/ResultHandler', Handle2dSimFiles));
+RatioOfRandVars  := noeval(ReadLibrary(cdir.'/lib/ResultHandler', RatioOfRandVars));
+RelativeDifference := noeval(ReadLibrary(cdir.'/lib/ResultHandler', RelativeDifference));
+
+RecTreeCase := noeval(ReadLibrary(cdir.'/lib/RecTree', RecTreeCase));
+GetTreeCase := noeval(ReadLibrary(cdir.'/lib/RecTree', GetTreeCase));
+GetAllTreeCases := noeval(ReadLibrary(cdir.'/lib/RecTree', GetAllTreeCases));
+
+ParseStrategy := noeval(ReadLibrary(cdir.'/lib/Parsing', ParseStrategy));
+ParseAllPrefixParams := noeval(ReadLibrary(cdir.'/lib/Parsing',ParseAllPrefixParams)):
+ParseParam := noeval(ReadLibrary(cdir.'/lib/Parsing',ParseParam));
+
+ProjectWLink := noeval(ReadLibrary(cdir.'/lib/DisplayFunctions', ProjectWLink));
+RawDataWLink := noeval(ReadLibrary(cdir.'/lib/DisplayFunctions', RawDataWLink));
+ProjectButtons := noeval(ReadLibrary(cdir.'/lib/DisplayFunctions', ProjectButtons));
+ProjectCheckbox := noeval(ReadLibrary(cdir.'/lib/DisplayFunctions', ProjectCheckbox));
+hash_sha2 := noeval(ReadLibrary(cdir.'/lib/hash', hash_sha2));
